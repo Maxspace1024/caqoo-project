@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <label for="username">username:</label>
+        <input id="username">
+    </div>
+    <div>
+        <label for="inputmsg">inputmsg:</label>
+        <input id="inputmsg">
+    </div>
+    <div>
+        <button id="connectbtn">connect</button>
+        <button id="sendbtn">send</button>
+    </div>
+    <div>
+        <ul id="block"></ul>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let username = document.querySelector("#username")
+            let inputmsg = document.querySelector("#inputmsg")
+            let connectbtn = document.querySelector("#connectbtn")
+            let sendbtn = document.querySelector("#sendbtn")
+            let block = document.querySelector("#block")
+
+            let ws = null
+            connectbtn.addEventListener("click", (e) => {
+                ws = new WebSocket(`ws://localhost:8000/ws`)
+                ws.onmessage = (e) => {
+                    data = JSON.parse(e.data)
+                    if (data.status === "SIGNUP") {
+                        backData = {
+                            userName    : username.value,
+                            vtype       : "PLAYER"
+                        }
+                        ws.send(JSON.stringify(backData))
+                    }
+
+                    let li = document.createElement("li")
+                    li.innerText = e.data
+                    block.appendChild(li)
+                }
+            })
+
+            sendbtn.addEventListener("click", (e) => {
+                e.preventDefault()
+                ws.send(inputmsg.value)
+                inputmsg.value = ""
+            })
+        })
+    </script>
+</body>
+</html>

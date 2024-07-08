@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>caqoo - admin</title>
+
+    <link rel="stylesheet" href="/static/css/fontConfig.css">
+    <style>
+        body {
+            background-image: url("/static/background01.svg");
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: "jf-openhuninn-2.0";
+        }
+        button {
+            margin: 1rem 0;
+            width: 100%;
+            display: block;
+            font-size: 3rem;
+        }
+
+        #root {
+            padding: 1rem
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <h1>admin</h1>
+        <button id="startBtn">開始遊戲</button>
+        <button id="restartBtn">重新開始遊戲</button>
+        <button id="answerDetailBtn">秀出詳解</button>
+        <button id="nextBtn">下一題</button>
+    </div>
+
+    <script src="/static/js/config.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let startBtn = document.querySelector("#startBtn")
+            let restartBtn = document.querySelector("#restartBtn")
+            let answerDetailBtn = document.querySelector("#answerDetailBtn")
+            let nextBtn = document.querySelector("#nextBtn")
+
+            
+            let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            ws.onmessage = (e) => {
+                data = JSON.parse(e.data)
+                reqData = {}
+                // 恢復連線
+                if (data.initConnect == true) {
+                    reqData.userName = "admin"
+                    reqData.vtype = "ADMIN"
+                    ws.send(JSON.stringify(reqData))
+                }
+            }
+
+            startBtn.addEventListener("click", () => {
+
+            })
+            restartBtn.addEventListener("click", () => {
+                
+            })
+            answerDetailBtn.addEventListener("click", () => {
+                reqData = {
+                    "action": "DISPLAY_ANSWER_DETAIL"
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+            nextBtn.addEventListener("click", () => {
+                reqData = {
+                    "action": "NEXT"
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+        })
+    </script>
+</body>
+</html>

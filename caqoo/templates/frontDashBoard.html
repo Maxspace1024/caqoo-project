@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>caqoo - frontdashboard</title>
+
+    <link rel="stylesheet" href="/static/css/fontConfig.css">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            background-image: url("/static/background01.svg");
+            font-family: "jf-openhuninn-2.0";
+        }
+        #greenbox {
+            display: none;
+            background-color: green;
+            width: 100px;
+            height: 100px;
+        }
+        #bluebox {
+            display: none;
+            background-color: blue;
+            width: 100px;
+            height: 100px;
+        }
+        #redbox {
+            display: none;
+            background-color: red;
+            width: 100px;
+            height: 100px;
+        }
+
+        #root {
+            width: 80vw;
+            margin: auto auto;
+        }
+
+        #quesBlock {
+            display: none;
+            padding: 3rem;
+        }
+        #quesContentBlock{
+            display: block;
+            margin: auto auto;
+        }
+        #quesTitle {
+            background-color: rgb(237, 237, 237);
+            font-size: 2rem;
+            text-align: center;
+        }
+        #quesContent {
+            background-color: rgb(237, 237, 237);
+            padding: 1rem;
+            font-weight: bolder;
+            font-size: 3rem;
+
+        }
+        #answerOptionBlock {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        #answerDetail {
+            background-color: rgb(237, 237, 237);
+            padding: 1rem;
+            font-weight: bolder;
+            font-size: 2rem;
+        }
+        .ansItem {
+            background-color: rgb(225, 225, 225);
+            padding: 10px;
+            font-size: 3rem;
+        }
+
+        #endBlock {
+            display: none;
+            text-align: center;
+        }
+
+        .wrongAnswer {
+            background-color: red;
+        }
+        .rightAnswer {
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <div id="greenbox">ready</div>
+    <div id="bluebox">ques</div>
+    <div id="redbox">answer</div>
+    
+
+    <div id="root">
+        <div id="signupBlock">
+            <!-- 玩家輸入基本訊息 -->
+        </div>
+        <div id="readyBlock">
+            <!-- 給予玩家準備時等待畫面 -->
+        </div>
+        <div id="quesBlock">
+            <!-- 玩家作答時畫面 -->
+            <div id="quesContentBlock">
+                <span id="quesTitle">問題#1</span>
+                <p id="quesContent">我是問題我是問題我是問題我是問題我是問題我是問題我是問題我是問題</p>
+            </div>
+            <div id="answerOptionBlock">
+                <!-- 作答選項 -->
+                <span id="ans0" class="ansItem">答案1</span>
+                <span id="ans1" class="ansItem">答案2</span>
+                <span id="ans2" class="ansItem">答案3</span>
+                <span id="ans3" class="ansItem">答案4</span>
+            </div>
+            <div id="answerDetailBlock">
+                <!-- 公布詳解 -->
+                <p id="answerDetail">公布詳解公布詳解公布詳解公布詳解公布詳解公布詳解</p>
+            </div>
+        </div>
+        <div id="endBlock">
+            <!-- 結束畫面 -->
+            <p id="quesContent">遊戲結束</p>
+        </div>
+    </div>
+        
+    <script src="/static/js/config.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () =>{
+            let greenbox = document.querySelector("#greenbox")
+            let bluebox = document.querySelector("#bluebox")
+            let redbox = document.querySelector("#redbox")
+
+            let quesBlock   = document.querySelector("#quesBlock")
+            let quesTitle   = document.querySelector("#quesTitle")
+            let quesContent = document.querySelector("#quesContent")
+            let answerDetail= document.querySelector("#answerDetail")
+            let anses = document.querySelector("#answerOptionBlock").children
+
+            let endBlock    = document.querySelector("#endBlock")
+
+            let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            ws.onmessage = (e) => {
+                data = JSON.parse(e.data)
+                reqData = {}
+                // 恢復連線
+                if (data.initConnect == true) {
+                    reqData.userName = "frontdashbaord"
+                    reqData.vtype = "FRONTDASHBOARD"
+                    ws.send(JSON.stringify(reqData))
+                }
+
+                switch(data.status) {
+                    case "SIGNUP":
+                        greenbox.style.display  = "inline-block"
+                        bluebox.style.display   = "inline-block"
+                        redbox.style.display    = "inline-block"
+
+                        endBlock.style.display  = "none"                                // 隱藏結束區塊
+                        break;
+                    case "SELECT":
+                        greenbox.style.display  = "inline-block"
+                        bluebox.style.display   = "inline-block"
+                        redbox.style.display    = "inline-block"
+                        break;
+                    case "READY":
+                        greenbox.style.display  = "inline-block"
+                        bluebox.style.display   = "none"
+                        redbox.style.display    = "none"
+
+                        quesBlock.style.display     = "block"                           // 顯示題目區塊
+                        answerDetail.style.display  = "none"                            // 隱藏詳細解答
+                        removeMarkedOption()
+                        break;
+                    case "QUES":
+                        greenbox.style.display  = "none"
+                        bluebox.style.display   = "inline-block"
+                        redbox.style.display    = "none"
+                        console.log(data)
+
+                        // 填入題目
+                        quesTitle.innerText   = data.quesTitle                          // 填入標題
+                        quesContent.innerText = data.quesContent                        // 填入題目
+                        for(let i=0;i<4;i++){
+                            anses[i].innerText = data.answers[i]                        // 填入選項
+                        }
+                        break;
+                    case "ANSWER":
+                        greenbox.style.display  = "none"
+                        bluebox.style.display   = "none"
+                        redbox.style.display    = "inline-block"
+
+                        if (data.action == "SEND_ANSWER_DETAIL") {
+                            answerDetail.innerText= data.answerDetail                   // 填入詳細解答
+                            addMarkedOption(data.trueAnswer, 0)                         // 標記答案
+                        } else if (data.action == "DISPLAY_ANSWER_DETAIL") {
+                            answerDetail.style.display = "block"                        // 顯示詳解
+                        }
+                        break;
+                    case "END":
+                        greenbox.style.display  = "none"
+                        bluebox.style.display   = "none"
+                        redbox.style.display    = "none"
+
+                        quesBlock.style.display = "none"                                // 隱藏問題區塊
+                        endBlock.style.display  = "block"                               // 顯示結束區塊
+                        break;
+                }
+            }
+
+            function removeMarkedOption() {                                             // 對選項清空marker
+                for(let i=0;i<anses.length;i++) {
+                    anses[i].classList.remove("wrongAnswer")
+                    anses[i].classList.remove("rightAnswer")
+                }
+            }
+            function addMarkedOption(trueIndex, selectedIndex) {                        // 對選項加上marker
+                anses[trueIndex].classList.add("rightAnswer")
+                if(trueIndex != selectedIndex) {
+                    anses[selectedIndex].classList.add("wrongAnswer")
+                }
+            }
+        })
+    </script>
+</body>
+</html>
