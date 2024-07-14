@@ -5,9 +5,11 @@ from enumx.Action import *
 
 import uvicorn
 import sqlite3
-from fastapi import FastAPI, WebSocket, Request, Path
+from fastapi import FastAPI, WebSocket, Request, Path, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+from service.GameService import *
 
 app = FastAPI()
 conn = sqlite3.connect("caqoo.db")
@@ -15,6 +17,18 @@ conn.row_factory = sqlite3.Row                                              # �
 manager = ConnectionManager(conn)                                           # dependency injection
 app.mount("/static", StaticFiles(directory="static"), name="static")        # 掛載靜態檔案
 templates = Jinja2Templates(directory="templates")                          # 掛載模板
+
+quesService = QuesService(conn)
+gameService = GameService(conn)
+
+from bean.GameInfoBean import *
+from bean.AnswerLogBean import *
+
+@app.get("/test")
+async def test():
+    bean = AnswerLogBean(-1, 2,0,1)
+    await gameService.createAnswerLog(bean)
+    return {"mesg": "test"}
 
 @app.get("/")
 async def home(request: Request):
@@ -51,12 +65,49 @@ async def backDashBoard(request: Request):
     }
     return templates.TemplateResponse(name="backDashBoard.html", context=context)
 
+@app.get("/backDashBoard/importQueses")
+async def backDashBoardImportQueses(request:Request):
+    context = {
+        "request":request
+    }
+    return templates.TemplateResponse(name="importQueses.html", context=context)
+
+@app.post("/backDashBoard/importQueses")
+async def importQueses(xlsxfile: UploadFile):
+    if "xlsx" in xlsxfile.filename:
+        await quesService.saveQueses(xlsxfile)
+        return {"success" : True}
+    else:
+        return {"success" : False}
+
+@app.get("/backDashBoard/quesesAll")
+async def quesesAll(request: Request):
+    context = {
+        "request":request
+    }
+    return templates.TemplateResponse(name="quesesAll.html", context=context)
+
+@app.get("/backDashBoard/quesesAll/data")
+async def quesesAllData():
+    return await quesService.getQuesesAll()
+
+@app.get("/backDashBoard/queses/{id}")
+async def queses(request: Request, id : int):
+    context = {
+        "request":request,
+        "quesesId": id
+    }
+    return templates.TemplateResponse(name="queses.html", context=context)
+
+@app.get("/backDashBoard/queses/data/{id}")
+async def queses(id : int):
+    return await quesService.getQueses(id)
+
 @app.websocket("/ws")
 async def ws(ws: WebSocket):
     global manager
 
     wsinfo = await manager.connect(ws)
-    await manager.requireQueses()
     try:
         while True:
             data = await ws.receive_json()
@@ -65,11 +116,12 @@ async def ws(ws: WebSocket):
             respData = {}
 
             if manager.gameStatus == GameStatus.SIGNUP:
-                if data["action"] == Action.NEXT.name:                              # admin action = NEXT
+                if data["action"] == Action.PLAYER_SIGNUP.name:                     # admin action = NEXT
                     manager.gameStatus = GameStatus.SELECT
                     respData["status"] = GameStatus.SELECT.name
-            if manager.gameStatus == GameStatus.SELECT:
+            elif manager.gameStatus == GameStatus.SELECT:
                 if data["action"] == Action.NEXT.name:                              # admin action = NEXT
+                    await manager.requireQueses()
                     manager.gameStatus = GameStatus.READY
                     respData["status"] = GameStatus.READY.name
             elif manager.gameStatus == GameStatus.READY:
@@ -83,9 +135,8 @@ async def ws(ws: WebSocket):
                     respData["quesTitle"]   = f"問題#{index + 1}"
                     respData["quesContent"] = bean.ques
                     respData["answers"]     = bean.answers
-                    respData["trueAnswer"]  = bean.trueAnswer
             elif manager.gameStatus == GameStatus.QUES:                     
-                if data["action"] == Action.NEXT.name:                              # admin action = NEXT
+                if data["action"] == Action.PLAYER_ANSWER.name:                     # admin action = NEXT
                     manager.gameStatus      = GameStatus.ANSWER
                     respData["status"]      = GameStatus.ANSWER.name
 
@@ -95,6 +146,7 @@ async def ws(ws: WebSocket):
                     respData["action"]      = Action.SEND_ANSWER_DETAIL.name
                     respData["trueAnswer"]  = bean.trueAnswer
                     respData["answerDetail"]= bean.answerDetail
+                    respData["playerAns"]   = data["playerAns"]
             elif manager.gameStatus == GameStatus.ANSWER:
                 if data["action"] == Action.NEXT.name:                              # admin action = NEXT
                     manager.quesList.index += 1
@@ -108,7 +160,9 @@ async def ws(ws: WebSocket):
                     respData["status"]       = GameStatus.ANSWER.name
                     respData["action"] = Action.DISPLAY_ANSWER_DETAIL.name
             elif manager.gameStatus == GameStatus.END:
-                pass
+                if data["action"] == Action.RESTART_GAME.name:
+                    manager.gameStatus = GameStatus.SIGNUP
+                    respData["status"]       = GameStatus.SIGNUP.name
             await manager.broadcast(respData)
     except Exception as e:
         print(e)

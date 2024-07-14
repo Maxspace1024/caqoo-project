@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>import Queses</title>
+</head>
+<body>
+    <form>
+        <div>
+            <input id="xlsxfile" name="xlsxfile" type="file">
+            <input id="uploadBtn" type="button" value="上傳">
+        </div>
+    </form>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let xlsxfile = document.querySelector("#xlsxfile")
+            let uploadBtn = document.querySelector("#uploadBtn")
+
+            uploadBtn.addEventListener("click", () => {
+                let fdata = new FormData()
+                fdata.append("xlsxfile", xlsxfile.files[0])
+
+                fetch("/backDashBoard/importQueses", {
+                    method: "POST",
+                    contentType: "multipart/form-data",
+                    body: fdata
+                })
+                .then(r => r.json())
+                .then(d => {console.log(d)})
+
+            })
+        })
+    </script>
+</body>
+</html>

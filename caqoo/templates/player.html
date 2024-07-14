@@ -19,6 +19,10 @@
             font-size: 3rem;
         }
 
+        #signupBlock {
+            display: none;
+        }
+
         #root {
             padding: 1rem
         }
@@ -38,5 +42,92 @@
             <button id="ans3Btn">選項4</button>
         </div>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let signupBlock = document.querySelector("#signupBlock")
+            let userNameInput = document.querySelector("#userNameInput")
+            let signupBtn = document.querySelector("#signupBtn")
+
+            let answerOptionBlock = document.querySelector("#answerOptionBlock")
+            let ans0Btn = document.querySelector("#ans0Btn")
+            let ans1Btn = document.querySelector("#ans1Btn")
+            let ans2Btn = document.querySelector("#ans2Btn")
+            let ans3Btn = document.querySelector("#ans3Btn")
+
+            // let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            let ws = new WebSocket("ws://localhost:8000/ws")
+            ws.onmessage = (e) => {
+                data = JSON.parse(e.data)
+                reqData = {}
+                
+                // 恢復連線
+                if (data.initConnect == true) {
+                    reqData.userName = "player"
+                    reqData.vtype = "PLAYER"
+                    ws.send(JSON.stringify(reqData))
+                }
+
+                switch(data.status) {
+                    case "SIGNUP":
+                        signupBlock.style.display = "block"
+                        answerOptionBlock.style.display = "none"
+                        break;
+                    case "SELECT":
+                        signupBlock.style.display = "none"
+                        break;
+                    case "READY":
+                        answerOptionBlock.style.display = "none"
+                        break;
+                    case "QUES":
+                        answerOptionBlock.style.display = "block"
+                        if (data.answers != null) {   
+                            answers = data.answers
+                            ans0Btn.innerText = answers[0]
+                            ans1Btn.innerText = answers[1]
+                            ans2Btn.innerText = answers[2]
+                            ans3Btn.innerText = answers[3]
+                        }
+                        break;
+                }
+            }
+
+            signupBtn.addEventListener("click", () => {
+                reqData = {
+                    "action": "PLAYER_SIGNUP",
+                    "signupName": userNameInput.value
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+
+            ans0Btn.addEventListener("click", () => {
+                reqData = {
+                    "action": "PLAYER_ANSWER",
+                    "playerAns": 0
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+            ans1Btn.addEventListener("click", () => {
+                reqData = {
+                    "action": "PLAYER_ANSWER",
+                    "playerAns": 1
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+            ans2Btn.addEventListener("click", () => {
+                reqData = {
+                    "action": "PLAYER_ANSWER",
+                    "playerAns": 2
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+            ans3Btn.addEventListener("click", () => {
+                reqData = {
+                    "action": "PLAYER_ANSWER",
+                    "playerAns": 3
+                }
+                ws.send(JSON.stringify(reqData))
+            })
+        })
+    </script>
 </body>
 </html>

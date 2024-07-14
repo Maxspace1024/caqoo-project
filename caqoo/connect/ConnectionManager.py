@@ -18,7 +18,7 @@ class ConnectionManager():
         self.quesService = QuesService(conn)
         
     async def requireQueses(self):
-        self.quesList = await self.quesService.getQuesesById(1)
+        self.quesList = await self.quesService.getQuesesById(2)
 
     async def connect(self, ws : WebSocket) -> WebSocketInfo:
         wsinfo = WebSocketInfo("", "", ws)

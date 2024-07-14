@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>queses</title>
+</head>
+<body>
+    <ol id="quesesBlock"></ol>
+    <script>
+        document.addEventListener("DOMContentLoaded", ()=> {
+            let quesesBlock = document.querySelector("#quesesBlock")
+            let quesesId = "{{quesesId}}"
+
+            fetch(`/backDashBoard/queses/data/${quesesId}`)
+            .then(r => r.json())
+            .then(d => {
+                for(let i=0;i<d.length; i++) {
+                    quesesBlock.innerHTML += `<li>
+                    <strong>${d[i].ques}</strong><ol>
+                        <li>${d[i].ans0}</li>
+                        <li>${d[i].ans1}</li>
+                        <li>${d[i].ans2}</li>
+                        <li>${d[i].ans3}</li>
+                    </ol></li>`
+                }
+            })
+        })
+    </script>
+</body>
+</html>

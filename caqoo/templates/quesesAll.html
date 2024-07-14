@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>queses all</title>
+</head>
+<body>
+    <ul id="quesesAll"></ul>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let quesesAll = document.querySelector("#quesesAll")
+
+            fetch("/backDashBoard/quesesAll/data")
+            .then(r => r.json())
+            .then(d => {
+                for(let i=0; i<d.length; i++) {
+                    quesesAll.innerHTML += `<li><a href="/backDashBoard/queses/${d[i].id}">${d[i].filename}</a></li>`
+                }
+            })
+        })
+    </script>
+</body>
+</html>

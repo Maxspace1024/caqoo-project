@@ -29,7 +29,6 @@
 <body>
     <div id="root">
         <h1>admin</h1>
-        <button id="startBtn">開始遊戲</button>
         <button id="restartBtn">重新開始遊戲</button>
         <button id="answerDetailBtn">秀出詳解</button>
         <button id="nextBtn">下一題</button>
@@ -38,13 +37,12 @@
     <script src="/static/js/config.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            let startBtn = document.querySelector("#startBtn")
             let restartBtn = document.querySelector("#restartBtn")
             let answerDetailBtn = document.querySelector("#answerDetailBtn")
             let nextBtn = document.querySelector("#nextBtn")
-
             
-            let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            // let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            let ws = new WebSocket(`ws://localhost:8000/ws`)
             ws.onmessage = (e) => {
                 data = JSON.parse(e.data)
                 reqData = {}
@@ -56,11 +54,11 @@
                 }
             }
 
-            startBtn.addEventListener("click", () => {
-
-            })
             restartBtn.addEventListener("click", () => {
-                
+                reqData = {
+                    "action": "RESTART_GAME"
+                }
+                ws.send(JSON.stringify(reqData))
             })
             answerDetailBtn.addEventListener("click", () => {
                 reqData = {

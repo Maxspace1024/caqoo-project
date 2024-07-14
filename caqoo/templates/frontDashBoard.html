@@ -38,6 +38,10 @@
             margin: auto auto;
         }
 
+        #readyBlock {
+            display: none;
+        }
+
         #quesBlock {
             display: none;
             padding: 3rem;
@@ -51,12 +55,11 @@
             font-size: 2rem;
             text-align: center;
         }
-        #quesContent {
+        #quesContent, .infoContent {
             background-color: rgb(237, 237, 237);
             padding: 1rem;
             font-weight: bolder;
             font-size: 3rem;
-
         }
         #answerOptionBlock {
             display: flex;
@@ -100,6 +103,7 @@
         </div>
         <div id="readyBlock">
             <!-- 給予玩家準備時等待畫面 -->
+            <p class="infoContent">REDAY?</p>
         </div>
         <div id="quesBlock">
             <!-- 玩家作答時畫面 -->
@@ -121,7 +125,7 @@
         </div>
         <div id="endBlock">
             <!-- 結束畫面 -->
-            <p id="quesContent">遊戲結束</p>
+            <p class="infoContent">遊戲結束</p>
         </div>
     </div>
         
@@ -132,6 +136,7 @@
             let bluebox = document.querySelector("#bluebox")
             let redbox = document.querySelector("#redbox")
 
+            let readyBlock   = document.querySelector("#readyBlock")
             let quesBlock   = document.querySelector("#quesBlock")
             let quesTitle   = document.querySelector("#quesTitle")
             let quesContent = document.querySelector("#quesContent")
@@ -140,7 +145,8 @@
 
             let endBlock    = document.querySelector("#endBlock")
 
-            let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            // let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
+            let ws = new WebSocket(`ws://localhost:8000/ws`)
             ws.onmessage = (e) => {
                 data = JSON.parse(e.data)
                 reqData = {}
@@ -169,8 +175,9 @@
                         bluebox.style.display   = "none"
                         redbox.style.display    = "none"
 
-                        quesBlock.style.display     = "block"                           // 顯示題目區塊
-                        answerDetail.style.display  = "none"                            // 隱藏詳細解答
+                        quesBlock.style.display     = "none"                           // 隱藏題目區塊
+                        answerDetail.style.display  = "none"                           // 隱藏詳細解答
+                        readyBlock.style.display    = "block"                          // 顯示準備區塊
                         removeMarkedOption()
                         break;
                     case "QUES":
@@ -179,6 +186,8 @@
                         redbox.style.display    = "none"
                         console.log(data)
 
+                        quesBlock.style.display     = "block"                           // 顯示題目區塊
+                        readyBlock.style.display    = "none"                            // 隱藏準備區塊
                         // 填入題目
                         quesTitle.innerText   = data.quesTitle                          // 填入標題
                         quesContent.innerText = data.quesContent                        // 填入題目
@@ -193,7 +202,7 @@
 
                         if (data.action == "SEND_ANSWER_DETAIL") {
                             answerDetail.innerText= data.answerDetail                   // 填入詳細解答
-                            addMarkedOption(data.trueAnswer, 0)                         // 標記答案
+                            addMarkedOption(data.trueAnswer, data.playerAns)            // 標記答案
                         } else if (data.action == "DISPLAY_ANSWER_DETAIL") {
                             answerDetail.style.display = "block"                        // 顯示詳解
                         }
