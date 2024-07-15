@@ -41,8 +41,7 @@
             let answerDetailBtn = document.querySelector("#answerDetailBtn")
             let nextBtn = document.querySelector("#nextBtn")
             
-            // let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
-            let ws = new WebSocket(`ws://localhost:8000/ws`)
+            let ws = new WebSocket(`ws://${HOST}:${PORT}/ws`)
             ws.onmessage = (e) => {
                 data = JSON.parse(e.data)
                 reqData = {}

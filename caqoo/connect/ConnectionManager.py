@@ -18,7 +18,7 @@ class ConnectionManager():
         self.quesService = QuesService(conn)
         
     async def requireQueses(self):
-        self.quesList = await self.quesService.getQuesesById(2)
+        self.quesList = await self.quesService.getQuesesById(10)
 
     async def connect(self, ws : WebSocket) -> WebSocketInfo:
         wsinfo = WebSocketInfo("", "", ws)
@@ -31,6 +31,10 @@ class ConnectionManager():
             "initConnect": True,
             "status": self.gameStatus.value
         }
+        # 處理player在ques狀態時需要填入按鈕選項文字
+        if self.gameStatus == GameStatus.QUES:
+            initData["answers"] = self.quesList.queses[self.quesList.index].answers
+            pass
         await wsinfo.ws.send_json(initData)
         signupData = await wsinfo.ws.receive_json()
         wsinfo.userName= signupData["userName"]
